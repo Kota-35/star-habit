@@ -1,3 +1,4 @@
 pub mod config;
 pub mod middleware;
 pub mod observability;
+pub mod routes;
