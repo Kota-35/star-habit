@@ -1,7 +1,30 @@
 use envy;
 
 use serde::Deserialize;
-use std::sync::OnceLock;
+use std::{fmt::Display, sync::OnceLock};
+
+/// アプリの実行環境。環境変数 APP_ENV の値で指定する。
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum AppEnv {
+    Development,
+    Staging,
+    Production,
+}
+
+impl Display for AppEnv {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            AppEnv::Development => write!(f, "development"),
+            AppEnv::Staging => write!(f, "staging"),
+            AppEnv::Production => write!(f, "production"),
+        }
+    }
+}
+
+fn default_port() -> u16 {
+    4000
+}
 
 /// 環境変数から読み込む設定。.env のキーと対応させる。
 #[derive(Debug, Deserialize)]
@@ -11,10 +34,8 @@ pub struct Env {
 
     /// Firebase Project ID（ID トークン検証に使用）
     pub firebase_project_id: String,
-}
 
-fn default_port() -> u16 {
-    4000
+    pub app_env: AppEnv,
 }
 
 static ENV: OnceLock<Env> = OnceLock::new();
