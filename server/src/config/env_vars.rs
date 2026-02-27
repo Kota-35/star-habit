@@ -30,7 +30,7 @@ pub fn init_env() -> Result<&'static Env, envy::Error> {
 }
 
 /// どこからでも参照する用。init_config() を先に呼んでおくこと。
-pub fn env() -> &'static Env {
+pub fn env_vars() -> &'static Env {
     ENV.get().expect(
         "config not initialized: call env::init_config() at startup",
     )
