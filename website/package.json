@@ -3,14 +3,18 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "openapi:generate": "cd ../server && cargo run --bin openapi_gen",
+    "api:generate": "orval --config ./orval.config.ts",
+    "dev": "pnpm openapi:generate && next dev",
+    "build": "pnpm openapi:generate && next build",
     "start": "next start",
     "lint": "biome check",
     "lint:fix": "biome check --write",
     "format": "biome format --write"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.90.21",
+    "axios": "^1.13.6",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "firebase": "^12.10.0",
@@ -28,6 +32,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "orval": "^8.5.1",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

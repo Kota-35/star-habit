@@ -35,6 +35,11 @@ export const envSchema = z.object({
     .trim()
     .min(1, "required")
     .describe("Firebase アプリ ID"),
+  NEXT_PUBLIC_SERVER_ORIGIN: z
+    .string()
+    .trim()
+    .min(1, "required")
+    .describe("サーバーのURL"),
 });
 
 export type Env = z.infer<typeof envSchema>;
