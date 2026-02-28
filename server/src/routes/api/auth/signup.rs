@@ -4,48 +4,56 @@ use tracing::info;
 use utoipa::ToSchema;
 use uuid::Uuid;
 
-use crate::routes::AppState;
+use crate::{
+    models::{profile::Profile, user::User},
+    routes::AppState,
+};
 
 #[derive(Deserialize, ToSchema)]
-pub struct Signup {
+pub struct SignupRequest {
     pub username: String,
     pub email: String,
     #[serde(rename = "firebaseUid")]
     pub firebase_uid: String,
 }
 
-#[derive(Debug, Serialize, sqlx::FromRow, ToSchema)]
-pub struct User {
+/// Signup API のレスポンス用 DTO
+#[derive(Debug, Clone, Serialize, ToSchema)]
+pub struct SignupResponse {
     pub id: Uuid,
+    #[serde(rename = "firebaseUid")]
     pub firebase_uid: String,
+    #[serde(rename = "createdAt")]
     pub created_at: chrono::DateTime<chrono::Utc>,
+    #[serde(rename = "updatedAt")]
     pub updated_at: chrono::DateTime<chrono::Utc>,
 }
 
-#[derive(Debug, Serialize, sqlx::FromRow)]
-pub struct Profile {
-    pub id: Uuid,
-    pub username: String,
-    pub email: String,
-    pub created_at: chrono::DateTime<chrono::Utc>,
-    pub updated_at: chrono::DateTime<chrono::Utc>,
-    pub user_id: Uuid,
+impl From<User> for SignupResponse {
+    fn from(user: User) -> Self {
+        Self {
+            id: user.id,
+            firebase_uid: user.firebase_uid,
+            created_at: user.created_at,
+            updated_at: user.updated_at,
+        }
+    }
 }
 
 /// 新規ユーザーとプロフィールを登録する
 #[utoipa::path(
     post,
     path = "/api/auth/signup",
-    request_body = Signup,
+    request_body = SignupRequest,
     responses(
-        (status = 201, description = "Created", body = User),
+        (status = 201, description = "Created", body = SignupResponse),
         (status = 500, description = "Internal Server Error")
     )
 )]
 pub async fn signup(
     State(ctx): State<AppState>,
-    Json(input): Json<Signup>,
-) -> (StatusCode, Json<Option<User>>) {
+    Json(input): Json<SignupRequest>,
+) -> (StatusCode, Json<Option<SignupResponse>>) {
     let mut tx = match ctx.db_pool.begin().await {
         Ok(t) => t,
         Err(_) => return (StatusCode::INTERNAL_SERVER_ERROR, Json(None)),
@@ -81,5 +89,5 @@ pub async fn signup(
     }
 
     info!("[signup] user created \n{:#?}\n{:#?}", user, profile);
-    (StatusCode::CREATED, Json(Some(user)))
+    (StatusCode::CREATED, Json(Some(SignupResponse::from(user))))
 }
