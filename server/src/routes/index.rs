@@ -1,5 +1,7 @@
-use axum::response::Html;
+use axum::{extract::State, response::Html};
 
-pub async fn index() -> Html<&'static str> {
+use crate::routes::AppState;
+
+pub async fn index(State(_): State<AppState>) -> Html<&'static str> {
     Html("<h1>Hello, World!</h1>")
 }

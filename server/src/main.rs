@@ -10,7 +10,7 @@ async fn main() {
 
     init_tracing();
 
-    let app = build_router();
+    let app = build_router().await.expect("Failed to build router");
 
     let addr: std::net::SocketAddr =
         (std::net::Ipv4Addr::UNSPECIFIED, env_vars().port).into();
@@ -18,5 +18,6 @@ async fn main() {
     let listener = tokio::net::TcpListener::bind(addr)
         .await
         .expect("bind failed");
+
     axum::serve(listener, app).await.expect("serve failed");
 }

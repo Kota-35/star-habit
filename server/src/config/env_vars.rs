@@ -36,6 +36,8 @@ pub struct Env {
     pub firebase_project_id: String,
 
     pub app_env: AppEnv,
+
+    pub database_url: String,
 }
 
 static ENV: OnceLock<Env> = OnceLock::new();
