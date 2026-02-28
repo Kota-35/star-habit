@@ -13,7 +13,7 @@ use crate::{
 mod api;
 mod health;
 mod index;
-mod openapi;
+pub mod openapi;
 
 #[derive(Clone)]
 struct AppState {

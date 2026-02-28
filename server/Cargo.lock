@@ -1535,6 +1535,7 @@ dependencies = [
  "envy",
  "owo-colors",
  "serde",
+ "serde_json",
  "sqlx",
  "tokio",
  "tower",
