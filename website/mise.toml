@@ -1,3 +1,7 @@
 [tools]
 node = "22.15.1"
 pnpm = "10.12.2"
+
+
+[env.'_']
+file = { path = ".env" }
