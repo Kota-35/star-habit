@@ -1,21 +1,20 @@
 use axum::{Json, extract::State, http::StatusCode};
 use serde::{Deserialize, Serialize};
 use tracing::info;
+use utoipa::ToSchema;
 use uuid::Uuid;
 
 use crate::routes::AppState;
 
-#[derive(Deserialize)]
+#[derive(Deserialize, ToSchema)]
 pub struct Signup {
-    username: String,
-
-    email: String,
-
+    pub username: String,
+    pub email: String,
     #[serde(rename = "firebaseUid")]
-    firebase_uid: String,
+    pub firebase_uid: String,
 }
 
-#[derive(Debug, Serialize, sqlx::FromRow)]
+#[derive(Debug, Serialize, sqlx::FromRow, ToSchema)]
 pub struct User {
     pub id: Uuid,
     pub firebase_uid: String,
@@ -33,6 +32,16 @@ pub struct Profile {
     pub user_id: Uuid,
 }
 
+/// 新規ユーザーとプロフィールを登録する
+#[utoipa::path(
+    post,
+    path = "/api/auth/signup",
+    request_body = Signup,
+    responses(
+        (status = 201, description = "Created", body = User),
+        (status = 500, description = "Internal Server Error")
+    )
+)]
 pub async fn signup(
     State(ctx): State<AppState>,
     Json(input): Json<Signup>,

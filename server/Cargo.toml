@@ -17,3 +17,5 @@ tracing-subscriber = { version = "0.3.22", features = ["env-filter", "json", "ti
 sqlx = { version = "0.8.6", features = ["runtime-tokio", "tls-rustls-ring-native-roots", "postgres", "uuid", "chrono"] }
 uuid = { version = "1.0", features = ["v4", "serde"] }
 chrono = { version = "0.4.44", features = ["serde"] }
+utoipa = { version = "5", features = ["chrono", "uuid"] }
+utoipa-swagger-ui = { version = "9.0.2", features = ["axum"] }
