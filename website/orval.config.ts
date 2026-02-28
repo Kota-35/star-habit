@@ -9,6 +9,7 @@ export default defineConfig({
       client: "react-query",
       httpClient: "axios",
       biome: true,
+      clean: true,
       override: {
         mutator: {
           path: "./src/server/mutator/custom-instance.ts",
