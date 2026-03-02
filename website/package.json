@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "openapi:generate": "cd ../server && cargo run --bin openapi_gen",
-    "api:generate": "orval --config ./orval.config.ts",
+    "api:generate": "pnpm openapi:generate && orval --config ./orval.config.ts",
     "dev:client": "next dev",
     "dev:server": "cd ../server && watchexec -w . -e rs,toml -i target -r -- cargo run --bin server",
     "dev": "concurrently -n server,client -c blue,green \"pnpm dev:server\" \"pnpm dev:client\"",
