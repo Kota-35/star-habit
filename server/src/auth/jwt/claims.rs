@@ -11,7 +11,6 @@ pub enum TokenType {
 pub struct Claims {
     // Custom Claims
     pub id: uuid::Uuid,
-    pub firebase_uid: String,
     pub token_type: TokenType,
 
     // --- registered (standard) claims ---

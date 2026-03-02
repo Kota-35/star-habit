@@ -18,7 +18,6 @@ fn generate_token<K: TokenKind>(
 
     let claims = Claims {
         id: user.id,
-        firebase_uid: user.firebase_uid.clone(),
         token_type: K::token_type(),
         iss: cfg.issuer.clone(),
         aud: cfg.audience.clone(),
