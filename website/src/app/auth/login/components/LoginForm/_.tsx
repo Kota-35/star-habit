@@ -45,6 +45,9 @@ export const LoginForm = () => {
 
         <form onSubmit={loginFormOnSubmit}>
           <FieldGroup>
+            {errors.root?.message && (
+              <p className="text-red-500 text-xs">{errors.root.message}</p>
+            )}
             <Field>
               <FieldLabel htmlFor="email" className="text-black">
                 メールアドレス

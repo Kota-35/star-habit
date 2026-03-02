@@ -7,7 +7,12 @@ import {
   type LoginFormFields,
   loginFormFieldsSchema,
 } from "@/app/auth/shared/models/loginFormFields";
+import {
+  getFirebaseLoginErrorMessage,
+  getSigninApiErrorMessage,
+} from "@/app/auth/shared/utils/getLoginErrorMessage";
 import { useSignin } from "@/server/__generated__/endpoints";
+import type { AxiosError } from "axios";
 
 export const useLoginForm = () => {
   const router = useRouter();
@@ -27,13 +32,7 @@ export const useLoginForm = () => {
 
   const firebaseSignInMutation = useSignInWithEmailAndPassword({
     onError: (error) => {
-      const code = error?.code;
-      const message = error?.message;
-
-      const userMessage =
-        code === "auth/email-already-in-use"
-          ? "このメールアドレスはすでに登録されています。"
-          : (message ?? "登録に失敗しました。しばらくしてからお試しください。");
+      const userMessage = getFirebaseLoginErrorMessage(error?.code);
       setError("root", { message: userMessage });
     },
   });
@@ -48,8 +47,9 @@ export const useLoginForm = () => {
       },
 
       onError: (error) => {
-        console.error("[signinMutation]", error);
-        setError("root", { message: "ログインに失敗しました" });
+        const status = (error as AxiosError)?.response?.status;
+        const userMessage = getSigninApiErrorMessage(status);
+        setError("root", { message: userMessage });
       },
     },
   });
