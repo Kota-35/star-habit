@@ -1,10 +1,13 @@
 use axum::{Json, extract::State, http::StatusCode};
 use serde::{Deserialize, Serialize};
-use tracing::info;
+
 use utoipa::ToSchema;
-use uuid::Uuid;
 
 use crate::{
+    auth::jwt::{
+        JwtConfig, generate_access_token, generate_refresh_token,
+    },
+    config::env_vars,
     models::{profile::Profile, user::User},
     routes::AppState,
 };
@@ -20,24 +23,11 @@ pub struct SignupRequest {
 /// Signup API のレスポンス用 DTO
 #[derive(Debug, Clone, Serialize, ToSchema)]
 pub struct SignupResponse {
-    pub id: Uuid,
-    #[serde(rename = "firebaseUid")]
-    pub firebase_uid: String,
-    #[serde(rename = "createdAt")]
-    pub created_at: chrono::DateTime<chrono::Utc>,
-    #[serde(rename = "updatedAt")]
-    pub updated_at: chrono::DateTime<chrono::Utc>,
-}
+    #[serde(rename = "accessToken")]
+    pub access_token: String,
 
-impl From<User> for SignupResponse {
-    fn from(user: User) -> Self {
-        Self {
-            id: user.id,
-            firebase_uid: user.firebase_uid,
-            created_at: user.created_at,
-            updated_at: user.updated_at,
-        }
-    }
+    #[serde(rename = "refreshToken")]
+    pub refresh_token: String,
 }
 
 /// 新規ユーザーとプロフィールを登録する
@@ -79,15 +69,37 @@ pub async fn signup(
     .fetch_one(&mut *tx)
     .await;
 
-    let profile = match profile {
-        Ok(p) => p,
-        Err(_) => return (StatusCode::INTERNAL_SERVER_ERROR, Json(None)),
+    if profile.is_err() {
+        return (StatusCode::INTERNAL_SERVER_ERROR, Json(None));
     };
 
     if tx.commit().await.is_err() {
         return (StatusCode::INTERNAL_SERVER_ERROR, Json(None));
     }
 
-    info!("[signup] user created \n{:#?}\n{:#?}", user, profile);
-    (StatusCode::CREATED, Json(Some(SignupResponse::from(user))))
+    let jwt_config = JwtConfig {
+        secret: env_vars().jwt_secret.clone(),
+        issuer: env_vars().jwt_issuer.clone(),
+        audience: env_vars().jwt_audience.clone(),
+        access_ttl_secs: 60 * 15,            // 15分
+        refresh_ttl_secs: 60 * 60 * 24 * 30, // 30日
+    };
+
+    let access_token = match generate_access_token(&user, &jwt_config) {
+        Ok(token) => token,
+        Err(_) => return (StatusCode::INTERNAL_SERVER_ERROR, Json(None)),
+    };
+
+    let refresh_token = match generate_refresh_token(&user, &jwt_config) {
+        Ok(token) => token,
+        Err(_) => return (StatusCode::INTERNAL_SERVER_ERROR, Json(None)),
+    };
+
+    (
+        StatusCode::CREATED,
+        Json(Some(SignupResponse {
+            access_token,
+            refresh_token,
+        })),
+    )
 }

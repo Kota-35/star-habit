@@ -20,3 +20,4 @@ uuid = { version = "1.0", features = ["v4", "serde"] }
 chrono = { version = "0.4.44", features = ["serde"] }
 utoipa = { version = "5", features = ["chrono", "uuid"] }
 utoipa-swagger-ui = { version = "9.0.2", features = ["axum"] }
+jsonwebtoken = { version = "10.3.0", features = ["rust_crypto"] }

@@ -38,6 +38,12 @@ pub struct Env {
     pub app_env: AppEnv,
 
     pub database_url: String,
+
+    pub jwt_audience: String,
+
+    pub jwt_issuer: String,
+
+    pub jwt_secret: String,
 }
 
 static ENV: OnceLock<Env> = OnceLock::new();
