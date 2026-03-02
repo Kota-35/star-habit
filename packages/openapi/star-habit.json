@@ -37,6 +37,12 @@
               }
             }
           },
+          "400": {
+            "description": "Bad Request (unsupported or missing sign_in_provider in Firebase ID token)"
+          },
+          "401": {
+            "description": "Unauthorized (missing or invalid idToken in request body)"
+          },
           "500": {
             "description": "Internal Server Error"
           }
@@ -51,14 +57,15 @@
         "required": [
           "username",
           "email",
-          "firebaseUid"
+          "idToken"
         ],
         "properties": {
           "email": {
             "type": "string"
           },
-          "firebaseUid": {
-            "type": "string"
+          "idToken": {
+            "type": "string",
+            "description": "Firebase Auth で発行された ID トークン（ボディで送信）"
           },
           "username": {
             "type": "string"
