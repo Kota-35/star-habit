@@ -31,7 +31,7 @@ export const PasswordField = (props: Props) => {
     name,
     label,
     placeholder,
-    passwordButtonOnClick,
+    onTogglePasswordVisibility,
     showPassword,
     onFocus: handleOnFocus,
     onBlur: handleOnBlur,
@@ -63,7 +63,7 @@ export const PasswordField = (props: Props) => {
         />
         <button
           type="button"
-          onClick={passwordButtonOnClick}
+          onClick={onTogglePasswordVisibility}
           className="-translate-y-1/2 absolute top-1/2 right-3 text-gray-500 hover:text-gray-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-0"
           aria-label={showPassword ? "パスワードを隠す" : "パスワードを表示"}
         >
