@@ -1,16 +1,23 @@
 "use client";
 
-import { FormField } from "@/app/auth/shared/components/FormField";
 import { GoogleLogo } from "@/app/auth/shared/components/GoogleIcon";
-import { PasswordField } from "@/app/auth/shared/components/PasswordField";
 
 import { Button } from "@/components/ui/button";
-import { FieldGroup } from "@/components/ui/field";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { useLoginForm } from "./_.hook";
+import { PasswordField } from "./components/PasswordField";
 
 export const LoginForm = () => {
-  const { toSignupFormOnClick } = useLoginForm();
+  const {
+    toSignupFormOnClick,
+    loginFormOnSubmit,
+    register,
+    errors,
+    control,
+    isSubmitPending,
+  } = useLoginForm();
 
   return (
     <div className="flex w-md flex-col rounded-xl bg-white px-6 py-10 shadow-2xl">
@@ -36,17 +43,28 @@ export const LoginForm = () => {
           <Separator className="flex-1 bg-gray-300" />
         </div>
 
-        <form>
+        <form onSubmit={loginFormOnSubmit}>
           <FieldGroup>
-            <FormField
-              id="login-email"
-              label="Email"
-              type="email"
-              placeholder="m@example.com"
-            />
-            <PasswordField id="login-password" label="パスワード" />
+            <Field>
+              <FieldLabel htmlFor="email" className="text-black">
+                メールアドレス
+              </FieldLabel>
+              <Input
+                id="email"
+                type="email"
+                placeholder="m@example.com"
+                {...register("email")}
+                className="border-gray-300 py-5 text-black placeholder:text-gray-400 focus-visible:border-gray-500 focus-visible:ring-0"
+              />
+              {errors.email && (
+                <p className="text-red-500 text-xs">{errors.email.message}</p>
+              )}
+            </Field>
+
+            <PasswordField control={control} errors={errors} />
+
             <Button className="mt-5 rounded-xl bg-blue-600 py-5" type="submit">
-              ログイン
+              {isSubmitPending ? "送信中" : "ログイン"}
             </Button>
           </FieldGroup>
         </form>
