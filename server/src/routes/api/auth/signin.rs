@@ -8,7 +8,7 @@ use crate::{
         jwt::{JwtConfig, generate_access_token, generate_refresh_token},
     },
     config::env_vars,
-    models::user::User,
+    models::{auth_method::AuthProviderId, user::User},
     routes::AppState,
 };
 
@@ -57,6 +57,20 @@ pub async fn signin(
     };
 
     let provider_uid = claims.sub.clone();
+    let provider_id = match claims
+        .firebase
+        .as_ref()
+        .and_then(|f| f.sign_in_provider.as_deref())
+        .and_then(AuthProviderId::from_firebase_sign_in_provider)
+    {
+        Some(id) => id,
+        None => {
+            tracing::warn!(
+                "[signup] unsupported or missing sign_in_provider in token (firebase.sign_in_provider)"
+            );
+            return (StatusCode::BAD_REQUEST, Json(None));
+        }
+    };
 
     let user = match sqlx::query_as::<_, User>(
         r#"
@@ -66,10 +80,12 @@ pub async fn signin(
             INNER JOIN auth_methods 
                 ON users.id = auth_methods.user_id
             WHERE
-                auth_methods.provider_uid = $1
+                auth_methods.provider_uid = $1 
+                AND auth_methods.provider_id = $2
         "#,
     )
     .bind(&provider_uid)
+    .bind(&provider_id)
     .fetch_one(&ctx.db_pool)
     .await
     {
