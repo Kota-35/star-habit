@@ -4,12 +4,24 @@ import { GoogleLogo } from "@/app/auth/shared/components/GoogleIcon";
 import { Button } from "@/components/ui/button";
 import { FieldGroup } from "@/components/ui/field";
 import { Separator } from "@/components/ui/separator";
-import { FormField } from "../../../shared/components/FormField";
-import { PasswordField } from "../../../shared/components/PasswordField";
 import { useSignupForm } from "./_.hook";
+import { FormField } from "./components/FormField";
+import { PasswordField } from "./components/PasswordField";
+import { PasswordStrength } from "./components/PasswordStrength";
 
 export const SignupForm = () => {
-  const { toLoginFormOnClick } = useSignupForm();
+  const {
+    toLoginFormOnClick,
+    signupFormOnSubmit,
+    isSubmitPending,
+    register,
+    control,
+    errors,
+    password,
+    passwordFocus,
+    passwordFieldOnBlur,
+    passwordFieldOnFocus,
+  } = useSignupForm();
 
   return (
     <div className="flex h-full items-center justify-center">
@@ -46,26 +58,58 @@ export const SignupForm = () => {
           <Separator className="flex-1 bg-gray-300" />
         </div>
 
-        <form>
+        <form onSubmit={signupFormOnSubmit}>
           <FieldGroup>
+            {errors.root?.message && (
+              <p className="text-red-500 text-xs">{errors.root.message}</p>
+            )}
             <FormField
-              id="name"
+              name="username"
               label="名前"
-              type="text"
+              register={register}
+              errors={errors}
               placeholder="山田 太郎"
             />
 
             <FormField
-              id="email"
-              label="Email"
-              type="email"
+              name="email"
+              label="メールアドレス"
+              register={register}
+              errors={errors}
               placeholder="m@example.com"
             />
 
-            <PasswordField id="password" label="パスワード" />
+            <div className="space-y-1">
+              <PasswordField
+                name="password"
+                label="パスワード"
+                control={control}
+                errors={errors}
+                placeholder=""
+                onFocus={passwordFieldOnFocus}
+                onBlur={passwordFieldOnBlur}
+              />
 
-            <Button className="mt-5 rounded-xl bg-blue-600 py-5" type="submit">
-              アカウントを作成する
+              <PasswordStrength
+                password={password}
+                isVisible={!passwordFocus && password.length > 0}
+              />
+            </div>
+
+            <PasswordField
+              name="confirmPassword"
+              label="パスワード(確認)"
+              control={control}
+              errors={errors}
+              placeholder=""
+            />
+
+            <Button
+              className="mt-5 rounded-xl bg-blue-600 py-5 text-white"
+              type="submit"
+              disabled={isSubmitPending}
+            >
+              {isSubmitPending ? "送信中" : "アカウントを作成する"}
             </Button>
           </FieldGroup>
         </form>
