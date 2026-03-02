@@ -7,6 +7,6 @@
 
 export interface SignupRequest {
   email: string;
-  firebaseUid: string;
+  idToken: string;
   username: string;
 }

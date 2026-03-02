@@ -1,14 +1,14 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import type { FirebaseError } from "firebase/app";
 import { useRouter } from "next/navigation";
 import type React from "react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { useCreateUserWithEmailAndPassword } from "@/app/auth/shared/hooks/useCreateUserWithEmailAndPassword";
 import {
   type SignupFormFields,
   signupFormFieldsSchema,
 } from "@/app/auth/shared/models/signupFormFields";
-import { auth } from "@/lib/firebase";
 import { useSignup } from "@/server/__generated__/endpoints";
 
 export const useSignupForm = () => {
@@ -20,22 +20,31 @@ export const useSignupForm = () => {
     router.push("/auth/login");
   }) satisfies React.ComponentProps<"button">["onClick"];
 
-  const {
-    control,
-    handleSubmit,
-    register,
-    setError,
-    watch,
-    formState: { errors },
-  } = useForm<SignupFormFields>({
-    resolver: zodResolver(signupFormFieldsSchema),
-    defaultValues: {
-      username: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-    },
-  });
+  const { control, handleSubmit, register, setError, watch, formState } =
+    useForm<SignupFormFields>({
+      resolver: zodResolver(signupFormFieldsSchema),
+      defaultValues: {
+        username: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+      },
+    });
+
+  const firebaseCreateUserMutation =
+    useCreateUserWithEmailAndPassword<FirebaseError>({
+      onError: (error) => {
+        const code = error?.code;
+        const message = error?.message;
+
+        const userMessage =
+          code === "auth/email-already-in-use"
+            ? "このメールアドレスはすでに登録されています。"
+            : (message ??
+              "登録に失敗しました。しばらくしてからお試しください。");
+        setError("root", { message: userMessage });
+      },
+    });
 
   const signupMutation = useSignup({
     mutation: {
@@ -56,43 +65,19 @@ export const useSignupForm = () => {
   const signupFormOnSubmit = handleSubmit(async (data: SignupFormFields) => {
     const { username, email, password } = data;
 
-    const firebaseUser = await createUserWithEmailAndPassword(
-      auth,
-      email,
-      password,
-    )
-      .then((userCredential) => {
-        return userCredential.user;
-      })
-      .catch((error) => {
-        const code =
-          error && typeof error === "object" && "code" in error
-            ? String(error.code)
-            : undefined;
-        const message =
-          error && typeof error === "object" && "message" in error
-            ? String(error.message)
-            : undefined;
+    const userCredential = await firebaseCreateUserMutation
+      .mutateAsync({ email, password })
+      .catch(() => undefined);
 
-        if (code === "auth/email-already-exists") {
-          router.push("/auth/login");
-          throw error;
-        }
+    if (!userCredential) return;
 
-        const userMessage =
-          code === "auth/email-already-in-use"
-            ? "このメールアドレスはすでに登録されています。"
-            : (message ??
-              "登録に失敗しました。しばらくしてからお試しください。");
-        setError("root", { message: userMessage });
-        throw error;
-      });
+    const idToken = await userCredential.user.getIdToken();
 
     await signupMutation.mutateAsync({
       data: {
         username,
         email,
-        firebaseUid: firebaseUser.uid,
+        idToken,
       },
     });
   });
@@ -108,11 +93,11 @@ export const useSignupForm = () => {
   return {
     toLoginFormOnClick,
     signupFormOnSubmit,
-    isSubmitPending: signupMutation.isPending,
+    isSubmitPending: formState.isSubmitting,
 
     register,
     control,
-    errors,
+    errors: formState.errors,
 
     password: watch("password"),
     passwordFocus,
