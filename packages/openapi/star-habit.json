@@ -69,26 +69,15 @@
         "type": "object",
         "description": "Signup API のレスポンス用 DTO",
         "required": [
-          "id",
-          "firebaseUid",
-          "createdAt",
-          "updatedAt"
+          "accessToken",
+          "refreshToken"
         ],
         "properties": {
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "firebaseUid": {
+          "accessToken": {
             "type": "string"
           },
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "updatedAt": {
-            "type": "string",
-            "format": "date-time"
+          "refreshToken": {
+            "type": "string"
           }
         }
       }
