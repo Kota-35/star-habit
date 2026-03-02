@@ -9,8 +9,6 @@
  * Signup API のレスポンス用 DTO
  */
 export interface SignupResponse {
-  createdAt: string;
-  firebaseUid: string;
-  id: string;
-  updatedAt: string;
+  accessToken: string;
+  refreshToken: string;
 }

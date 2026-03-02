@@ -39,11 +39,16 @@ export const useSignupForm = () => {
 
   const signupMutation = useSignup({
     mutation: {
-      onSuccess: () => {
-        console.info("ログイン！");
+      onSuccess: ({ accessToken, refreshToken }) => {
+        localStorage.setItem("accessToken", accessToken);
+        localStorage.setItem("refreshToken", refreshToken);
+
+        router.push("/home");
       },
+
       onError: (error) => {
-        console.error(error);
+        console.error("[signupMutation]", error);
+        setError("root", { message: "登録に失敗しました" });
       },
     },
   });
