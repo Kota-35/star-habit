@@ -1,6 +1,8 @@
-use axum::{Router, routing::get};
+use axum::Router;
+use axum::routing::get;
 use sqlx::PgPool;
 use tower::ServiceBuilder;
+use tower_http::cors::CorsLayer;
 use tower_http::trace::TraceLayer;
 use utoipa::OpenApi;
 use utoipa_swagger_ui::SwaggerUi;
@@ -33,6 +35,7 @@ pub async fn build_router() -> Result<Router, sqlx::Error> {
             SwaggerUi::new("/swagger-ui")
                 .url("/api-docs/openapi.json", ApiDoc::openapi()),
         )
+        .layer(CorsLayer::permissive())
         .layer(ServiceBuilder::new().layer(TraceLayer::new_for_http()))
         .with_state(state);
 
