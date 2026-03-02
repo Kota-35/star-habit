@@ -4,11 +4,16 @@ use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
 use crate::{
-    auth::jwt::{
-        JwtConfig, generate_access_token, generate_refresh_token,
+    auth::{
+        firebase::verify_firebase_id_token,
+        jwt::{JwtConfig, generate_access_token, generate_refresh_token},
     },
     config::env_vars,
-    models::{profile::Profile, user::User},
+    models::{
+        auth_method::{AuthMethod, AuthProviderId},
+        profile::Profile,
+        user::User,
+    },
     routes::AppState,
 };
 
@@ -16,8 +21,9 @@ use crate::{
 pub struct SignupRequest {
     pub username: String,
     pub email: String,
-    #[serde(rename = "firebaseUid")]
-    pub firebase_uid: String,
+    /// Firebase Auth で発行された ID トークン（ボディで送信）
+    #[serde(rename = "idToken")]
+    pub id_token: String,
 }
 
 /// Signup API のレスポンス用 DTO
@@ -37,6 +43,8 @@ pub struct SignupResponse {
     request_body = SignupRequest,
     responses(
         (status = 201, description = "Created", body = SignupResponse),
+        (status = 400, description = "Bad Request (unsupported or missing sign_in_provider in Firebase ID token)"),
+        (status = 401, description = "Unauthorized (missing or invalid idToken in request body)"),
         (status = 500, description = "Internal Server Error")
     )
 )]
@@ -44,38 +52,89 @@ pub async fn signup(
     State(ctx): State<AppState>,
     Json(input): Json<SignupRequest>,
 ) -> (StatusCode, Json<Option<SignupResponse>>) {
-    let mut tx = match ctx.db_pool.begin().await {
-        Ok(t) => t,
-        Err(_) => return (StatusCode::INTERNAL_SERVER_ERROR, Json(None)),
-    };
-
-    let user = match sqlx::query_as::<_, User>(
-        "INSERT INTO users (firebase_uid) VALUES ($1) RETURNING *",
+    let claims = match verify_firebase_id_token(
+        &input.id_token,
+        &env_vars().firebase_project_id,
     )
-    .bind(&input.firebase_uid)
-    .fetch_one(&mut *tx)
     .await
     {
-        Ok(u) => u,
-        Err(_) => return (StatusCode::INTERNAL_SERVER_ERROR, Json(None)),
+        Ok(c) => c,
+        Err(_error) => {
+            // 詳細は verify_firebase_id_token 内で既に error レベルでログ済み
+            return (StatusCode::UNAUTHORIZED, Json(None));
+        }
     };
 
-    let profile = sqlx::query_as::<_, Profile>(
-        "INSERT INTO profiles (username, email, user_id) VALUES ($1, $2, $3) RETURNING *",
-    )
-    .bind(&input.username)
-    .bind(&input.email)
-    .bind(&user.id)
-    .fetch_one(&mut *tx)
-    .await;
-
-    if profile.is_err() {
-        return (StatusCode::INTERNAL_SERVER_ERROR, Json(None));
+    let provider_uid = claims.sub.clone();
+    let provider_id = match claims
+        .firebase
+        .as_ref()
+        .and_then(|f| f.sign_in_provider.as_deref())
+        .and_then(AuthProviderId::from_firebase_sign_in_provider)
+    {
+        Some(id) => id,
+        None => {
+            tracing::warn!(
+                "[signup] unsupported or missing sign_in_provider in token (firebase.sign_in_provider)"
+            );
+            return (StatusCode::BAD_REQUEST, Json(None));
+        }
     };
 
-    if tx.commit().await.is_err() {
-        return (StatusCode::INTERNAL_SERVER_ERROR, Json(None));
-    }
+    let user = {
+        let mut tx = match ctx.db_pool.begin().await {
+            Ok(t) => t,
+            Err(_) => {
+                return (StatusCode::INTERNAL_SERVER_ERROR, Json(None));
+            }
+        };
+
+        let user = match sqlx::query_as::<_, User>(
+            "INSERT INTO users DEFAULT VALUES RETURNING *",
+        )
+        .fetch_one(&mut *tx)
+        .await
+        {
+            Ok(u) => u,
+            Err(_) => {
+                return (StatusCode::INTERNAL_SERVER_ERROR, Json(None));
+            }
+        };
+
+        let profile = sqlx::query_as::<_, Profile>(
+            "INSERT INTO profiles (username, email, user_id) VALUES ($1, $2, $3) RETURNING *",
+        )
+        .bind(&input.username)
+        .bind(&input.email)
+        .bind(&user.id)
+        .fetch_one(&mut *tx)
+        .await;
+
+        if profile.is_err() {
+            return (StatusCode::INTERNAL_SERVER_ERROR, Json(None));
+        };
+
+        let _auth_method = match sqlx::query_as::<_, AuthMethod>(
+            "INSERT INTO auth_methods (user_id, provider_id, provider_uid) VALUES ($1, $2, $3) RETURNING *",
+        )
+        .bind(&user.id)
+        .bind(provider_id)
+        .bind(&provider_uid)
+        .fetch_one(&mut *tx)
+        .await
+        {
+            Ok(m) => m,
+            Err(_) => {
+                return (StatusCode::INTERNAL_SERVER_ERROR, Json(None));
+            }
+        };
+
+        if tx.commit().await.is_err() {
+            return (StatusCode::INTERNAL_SERVER_ERROR, Json(None));
+        }
+
+        user
+    };
 
     let jwt_config = JwtConfig {
         secret: env_vars().jwt_secret.clone(),
