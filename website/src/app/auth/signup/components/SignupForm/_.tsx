@@ -1,5 +1,7 @@
 "use client";
 
+import { Loader2 } from "lucide-react";
+
 import { GoogleLogo } from "@/app/auth/shared/components/GoogleIcon";
 import { Button } from "@/components/ui/button";
 import { FieldGroup } from "@/components/ui/field";
@@ -109,7 +111,14 @@ export const SignupForm = () => {
               type="submit"
               disabled={isSubmitPending}
             >
-              {isSubmitPending ? "送信中" : "アカウントを作成する"}
+              {isSubmitPending ? (
+                <>
+                  <Loader2 className="size-5 animate-spin" aria-hidden />
+                  送信中
+                </>
+              ) : (
+                "アカウントを作成する"
+              )}
             </Button>
           </FieldGroup>
         </form>

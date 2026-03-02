@@ -1,5 +1,7 @@
 "use client";
 
+import { Loader2 } from "lucide-react";
+
 import { GoogleLogo } from "@/app/auth/shared/components/GoogleIcon";
 
 import { Button } from "@/components/ui/button";
@@ -66,8 +68,19 @@ export const LoginForm = () => {
 
             <PasswordField control={control} errors={errors} />
 
-            <Button className="mt-5 rounded-xl bg-blue-600 py-5" type="submit">
-              {isSubmitPending ? "送信中" : "ログイン"}
+            <Button
+              className="mt-5 rounded-xl bg-blue-600 py-5"
+              type="submit"
+              disabled={isSubmitPending}
+            >
+              {isSubmitPending ? (
+                <>
+                  <Loader2 className="size-5 animate-spin" aria-hidden />
+                  送信中
+                </>
+              ) : (
+                "ログイン"
+              )}
             </Button>
           </FieldGroup>
         </form>
