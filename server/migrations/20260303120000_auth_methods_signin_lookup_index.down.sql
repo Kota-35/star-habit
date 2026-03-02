@@ -1,0 +1,1 @@
+DROP INDEX IF EXISTS idx_auth_methods_provider_include_user_id;

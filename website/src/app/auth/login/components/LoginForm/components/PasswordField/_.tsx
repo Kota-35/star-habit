@@ -2,62 +2,39 @@
 
 import clsx from "clsx";
 import { Eye, EyeOff } from "lucide-react";
-import type React from "react";
-import {
-  type Control,
-  Controller,
-  type FieldErrors,
-  type Path,
-} from "react-hook-form";
-import type { SignupFormFields } from "@/app/auth/shared/models/signupFormFields";
+import { type Control, Controller, type FieldErrors } from "react-hook-form";
+import type { LoginFormFields } from "@/app/auth/shared/models/loginFormFields";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { userPasswordField } from "./_.hook";
 
 interface Props {
-  name: Path<Pick<SignupFormFields, "password" | "confirmPassword">>;
-  label: string;
-  control: Control<SignupFormFields>;
-  errors: FieldErrors<SignupFormFields>;
-  placeholder: string;
-  onFocus?: React.ComponentProps<"input">["onFocus"];
-  onBlur?: React.ComponentProps<"input">["onBlur"];
+  control: Control<LoginFormFields>;
+  errors: FieldErrors<LoginFormFields>;
 }
 
 export const PasswordField = (props: Props) => {
-  const {
-    control,
-    errors,
-    name,
-    label,
-    placeholder,
-    onTogglePasswordVisibility,
-    showPassword,
-    onFocus: handleOnFocus,
-    onBlur: handleOnBlur,
-  } = userPasswordField(props);
+  const { control, errors, onTogglePasswordVisibility, showPassword } =
+    userPasswordField(props);
   return (
     <Field>
-      <FieldLabel htmlFor={name} className="text-black">
-        {label}
+      <FieldLabel htmlFor="password" className="text-black">
+        パスワード
       </FieldLabel>
       <div className="relative w-full">
         <Controller
-          name={name}
+          name="password"
           control={control}
           render={({ field }) => (
             <Input
               {...field}
-              id={name}
+              id="password"
               type={showPassword ? "text" : "password"}
-              placeholder={placeholder}
               autoComplete="new-password"
               className={clsx(
                 "border-gray-300 py-5 pr-10 text-black placeholder:text-gray-400 focus-visible:border-gray-500 focus-visible:ring-0",
-                errors[name] && "border-red-500!",
+                errors.password && "border-red-500!",
               )}
-              onFocus={handleOnFocus}
-              onBlur={handleOnBlur}
             />
           )}
         />
@@ -74,8 +51,8 @@ export const PasswordField = (props: Props) => {
           )}
         </button>
       </div>
-      {errors[name] && (
-        <p className="text-red-500 text-xs">{errors[name].message ?? ""}</p>
+      {errors.password && (
+        <p className="text-red-500 text-xs">{errors.password.message ?? ""}</p>
       )}
     </Field>
   );

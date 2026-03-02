@@ -15,9 +15,101 @@ import { useMutation } from "@tanstack/react-query";
 import type { BodyType, ErrorType } from "../mutator/custom-instance";
 
 import { customInstance } from "../mutator/custom-instance";
-import type { SignupRequest, SignupResponse } from "./model";
+import type {
+  SigninRequest,
+  SigninResponse,
+  SignupRequest,
+  SignupResponse,
+} from "./model";
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
+
+/**
+ * @summary 既存ユーザーでサインインし、JWT の access/refresh トークンを返す
+ */
+export const signin = (
+  signinRequest: BodyType<SigninRequest>,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<SigninResponse>(
+    {
+      url: `/api/auth/signin`,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      data: signinRequest,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getSigninMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof signin>>,
+    TError,
+    { data: BodyType<SigninRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof signin>>,
+  TError,
+  { data: BodyType<SigninRequest> },
+  TContext
+> => {
+  const mutationKey = ["signin"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof signin>>,
+    { data: BodyType<SigninRequest> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return signin(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SigninMutationResult = NonNullable<
+  Awaited<ReturnType<typeof signin>>
+>;
+export type SigninMutationBody = BodyType<SigninRequest>;
+export type SigninMutationError = ErrorType<void>;
+
+/**
+ * @summary 既存ユーザーでサインインし、JWT の access/refresh トークンを返す
+ */
+export const useSignin = <TError = ErrorType<void>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof signin>>,
+      TError,
+      { data: BodyType<SigninRequest> },
+      TContext
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof signin>>,
+  TError,
+  { data: BodyType<SigninRequest> },
+  TContext
+> => {
+  return useMutation(getSigninMutationOptions(options), queryClient);
+};
 
 /**
  * @summary 新規ユーザーとプロフィールを登録する

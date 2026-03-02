@@ -5,9 +5,7 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface SignupRequest {
-  email: string;
+export interface SigninRequest {
   /** Firebase Auth で発行された ID トークン（ボディで送信） */
   idToken: string;
-  username: string;
 }
