@@ -9,6 +9,46 @@
     "version": "0.1.0"
   },
   "paths": {
+    "/api/auth/signin": {
+      "post": {
+        "tags": [
+          "crate::routes::api::auth::signin"
+        ],
+        "summary": "既存ユーザーでサインインし、JWT の access/refresh トークンを返す",
+        "operationId": "signin",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SigninRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SigninResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized (invalid or expired idToken)"
+          },
+          "404": {
+            "description": "Not Found (user not registered; sign up first)"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
     "/api/auth/signup": {
       "post": {
         "tags": [
@@ -52,6 +92,33 @@
   },
   "components": {
     "schemas": {
+      "SigninRequest": {
+        "type": "object",
+        "required": [
+          "idToken"
+        ],
+        "properties": {
+          "idToken": {
+            "type": "string",
+            "description": "Firebase Auth で発行された ID トークン（ボディで送信）"
+          }
+        }
+      },
+      "SigninResponse": {
+        "type": "object",
+        "required": [
+          "accessToken",
+          "refreshToken"
+        ],
+        "properties": {
+          "accessToken": {
+            "type": "string"
+          },
+          "refreshToken": {
+            "type": "string"
+          }
+        }
+      },
       "SignupRequest": {
         "type": "object",
         "required": [
