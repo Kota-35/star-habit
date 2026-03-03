@@ -12,6 +12,7 @@ use crate::{
     routes::AppState,
 };
 
+
 #[derive(Debug, Clone, Deserialize, Serialize, ToSchema)]
 pub struct SigninRequest {
     /// Firebase Auth で発行された ID トークン（ボディで送信）
@@ -51,7 +52,8 @@ pub async fn signin(
     .await
     {
         Ok(c) => c,
-        Err(_) => {
+        Err(e) => {
+            tracing::warn!("[signin] 401: idToken verification failed: {}", e);
             return (StatusCode::UNAUTHORIZED, Json(None));
         }
     };
