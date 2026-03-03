@@ -1,0 +1,1 @@
+export { SidebarHeaderContent } from "./_";

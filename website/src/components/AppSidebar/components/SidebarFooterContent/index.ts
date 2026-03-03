@@ -1,0 +1,1 @@
+export { SidebarFooterContent } from "./_";
