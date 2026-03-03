@@ -9,6 +9,43 @@
     "version": "0.1.0"
   },
   "paths": {
+    "/api/auth/refresh": {
+      "post": {
+        "tags": [
+          "crate::routes::api::auth::refresh"
+        ],
+        "summary": "refresh トークンで新しい access/refresh トークンのペアを再発行する",
+        "operationId": "refresh",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RefreshResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized (invalid or expired refreshToken, or user not found)"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
     "/api/auth/signin": {
       "post": {
         "tags": [
@@ -88,10 +125,93 @@
           }
         }
       }
+    },
+    "/api/me": {
+      "get": {
+        "tags": [
+          "crate::routes::api::me"
+        ],
+        "summary": "認証中のユーザー自身の情報を返す。要 Bearer トークン（access token）。",
+        "operationId": "me",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized (missing or invalid access token)"
+          },
+          "404": {
+            "description": "Not Found (profile not found)"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        },
+        "security": [
+          {
+            "bearer_auth": []
+          }
+        ]
+      }
     }
   },
   "components": {
     "schemas": {
+      "MeResponse": {
+        "type": "object",
+        "description": "/me のレスポンス。users.id と profiles の username / email を返す。",
+        "required": [
+          "userId",
+          "username",
+          "email"
+        ],
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "userId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "username": {
+            "type": "string"
+          }
+        }
+      },
+      "RefreshRequest": {
+        "type": "object",
+        "required": [
+          "refreshToken"
+        ],
+        "properties": {
+          "refreshToken": {
+            "type": "string",
+            "description": "再発行に使う refresh トークン（ボディで送信）"
+          }
+        }
+      },
+      "RefreshResponse": {
+        "type": "object",
+        "required": [
+          "accessToken",
+          "refreshToken"
+        ],
+        "properties": {
+          "accessToken": {
+            "type": "string"
+          },
+          "refreshToken": {
+            "type": "string"
+          }
+        }
+      },
       "SigninRequest": {
         "type": "object",
         "required": [
@@ -154,6 +274,13 @@
             "type": "string"
           }
         }
+      }
+    },
+    "securitySchemes": {
+      "bearer_auth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
       }
     }
   }

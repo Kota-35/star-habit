@@ -6,16 +6,27 @@
  */
 
 import type {
+  DataTag,
+  DefinedInitialDataOptions,
+  DefinedUseQueryResult,
   MutationFunction,
   QueryClient,
+  QueryFunction,
+  QueryKey,
+  UndefinedInitialDataOptions,
   UseMutationOptions,
   UseMutationResult,
+  UseQueryOptions,
+  UseQueryResult,
 } from "@tanstack/react-query";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import type { BodyType, ErrorType } from "../mutator/custom-instance";
 
 import { customInstance } from "../mutator/custom-instance";
 import type {
+  MeResponse,
+  RefreshRequest,
+  RefreshResponse,
   SigninRequest,
   SigninResponse,
   SignupRequest,
@@ -23,6 +34,93 @@ import type {
 } from "./model";
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
+
+/**
+ * @summary refresh トークンで新しい access/refresh トークンのペアを再発行する
+ */
+export const refresh = (
+  refreshRequest: BodyType<RefreshRequest>,
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<RefreshResponse>(
+    {
+      url: `/api/auth/refresh`,
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      data: refreshRequest,
+      signal,
+    },
+    options,
+  );
+};
+
+export const getRefreshMutationOptions = <
+  TError = ErrorType<void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof refresh>>,
+    TError,
+    { data: BodyType<RefreshRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof refresh>>,
+  TError,
+  { data: BodyType<RefreshRequest> },
+  TContext
+> => {
+  const mutationKey = ["refresh"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof refresh>>,
+    { data: BodyType<RefreshRequest> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return refresh(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RefreshMutationResult = NonNullable<
+  Awaited<ReturnType<typeof refresh>>
+>;
+export type RefreshMutationBody = BodyType<RefreshRequest>;
+export type RefreshMutationError = ErrorType<void>;
+
+/**
+ * @summary refresh トークンで新しい access/refresh トークンのペアを再発行する
+ */
+export const useRefresh = <TError = ErrorType<void>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof refresh>>,
+      TError,
+      { data: BodyType<RefreshRequest> },
+      TContext
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof refresh>>,
+  TError,
+  { data: BodyType<RefreshRequest> },
+  TContext
+> => {
+  return useMutation(getRefreshMutationOptions(options), queryClient);
+};
 
 /**
  * @summary 既存ユーザーでサインインし、JWT の access/refresh トークンを返す
@@ -197,3 +295,132 @@ export const useSignup = <TError = ErrorType<void>, TContext = unknown>(
 > => {
   return useMutation(getSignupMutationOptions(options), queryClient);
 };
+
+/**
+ * @summary 認証中のユーザー自身の情報を返す。要 Bearer トークン（access token）。
+ */
+export const me = (
+  options?: SecondParameter<typeof customInstance>,
+  signal?: AbortSignal,
+) => {
+  return customInstance<MeResponse>(
+    { url: `/api/me`, method: "GET", signal },
+    options,
+  );
+};
+
+export const getMeQueryKey = () => {
+  return [`/api/me`] as const;
+};
+
+export const getMeQueryOptions = <
+  TData = Awaited<ReturnType<typeof me>>,
+  TError = ErrorType<void>,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<Awaited<ReturnType<typeof me>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof customInstance>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getMeQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof me>>> = ({ signal }) =>
+    me(requestOptions, signal);
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof me>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type MeQueryResult = NonNullable<Awaited<ReturnType<typeof me>>>;
+export type MeQueryError = ErrorType<void>;
+
+export function useMe<
+  TData = Awaited<ReturnType<typeof me>>,
+  TError = ErrorType<void>,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof me>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof me>>,
+          TError,
+          Awaited<ReturnType<typeof me>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useMe<
+  TData = Awaited<ReturnType<typeof me>>,
+  TError = ErrorType<void>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof me>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof me>>,
+          TError,
+          Awaited<ReturnType<typeof me>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+export function useMe<
+  TData = Awaited<ReturnType<typeof me>>,
+  TError = ErrorType<void>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof me>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+};
+/**
+ * @summary 認証中のユーザー自身の情報を返す。要 Bearer トークン（access token）。
+ */
+
+export function useMe<
+  TData = Awaited<ReturnType<typeof me>>,
+  TError = ErrorType<void>,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof me>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customInstance>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & {
+  queryKey: DataTag<QueryKey, TData, TError>;
+} {
+  const queryOptions = getMeQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
