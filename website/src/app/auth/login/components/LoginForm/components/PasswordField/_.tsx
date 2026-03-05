@@ -3,7 +3,7 @@
 import clsx from "clsx";
 import { Eye, EyeOff } from "lucide-react";
 import { type Control, Controller, type FieldErrors } from "react-hook-form";
-import type { LoginFormFields } from "@/app/auth/shared/models/loginFormFields";
+import type { LoginFormFields } from "@/app/auth/shared/libs/zod/loginFormFields";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { userPasswordField } from "./_.hook";

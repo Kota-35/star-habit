@@ -7,7 +7,7 @@ import { useSignInWithEmailAndPassword } from "@/app/auth/shared/hooks/useSignIn
 import {
   type LoginFormFields,
   loginFormFieldsSchema,
-} from "@/app/auth/shared/models/loginFormFields";
+} from "@/app/auth/shared/libs/zod/loginFormFields";
 import {
   getFirebaseLoginErrorMessage,
   getSigninApiErrorMessage,

@@ -8,7 +8,7 @@ import { useCreateUserWithEmailAndPassword } from "@/app/auth/shared/hooks/useCr
 import {
   type SignupFormFields,
   signupFormFieldsSchema,
-} from "@/app/auth/shared/models/signupFormFields";
+} from "@/app/auth/shared/libs/zod/signupFormFields";
 import { useSignup } from "@/server/__generated__/endpoints";
 
 export const useSignupForm = () => {

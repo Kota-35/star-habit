@@ -9,7 +9,7 @@ import {
   type FieldErrors,
   type Path,
 } from "react-hook-form";
-import type { SignupFormFields } from "@/app/auth/shared/models/signupFormFields";
+import type { SignupFormFields } from "@/app/auth/shared/libs/zod/signupFormFields";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { userPasswordField } from "./_.hook";

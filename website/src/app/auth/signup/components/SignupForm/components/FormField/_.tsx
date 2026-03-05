@@ -1,6 +1,6 @@
 import type { FieldErrors, Path, UseFormRegister } from "react-hook-form";
 import { match } from "ts-pattern";
-import type { SignupFormFields } from "@/app/auth/shared/models/signupFormFields";
+import type { SignupFormFields } from "@/app/auth/shared/libs/zod/signupFormFields";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 
