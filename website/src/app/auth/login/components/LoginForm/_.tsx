@@ -69,7 +69,7 @@ export const LoginForm = () => {
             <PasswordField control={control} errors={errors} />
 
             <Button
-              className="mt-5 rounded-xl bg-blue-600 py-5"
+              className="mt-5 rounded-xl bg-blue-600 py-5 text-white"
               type="submit"
               disabled={isSubmitPending}
             >
