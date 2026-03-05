@@ -33,6 +33,7 @@ export const SidebarBodyContent = () => {
                     asChild
                     isActive={isActive}
                     tooltip={item.label}
+                    className="select-none rounded-2xl py-1 hover:bg-blue-100/20"
                   >
                     <Link href={item.path}>
                       <Icon />
