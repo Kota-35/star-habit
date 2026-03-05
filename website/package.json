@@ -10,9 +10,11 @@
     "dev": "concurrently -n server,client -c blue,green \"pnpm dev:server\" \"pnpm dev:client\"",
     "build": "pnpm openapi:generate && next build",
     "start": "next start",
-    "lint": "biome check",
-    "lint:fix": "biome check --write",
-    "format": "biome format --write"
+    "lint": "biome check && pnpm typecheck",
+    "lint:fix": "biome check --write && pnpm typecheck",
+    "format": "biome format",
+    "format:fix": "biome format --write",
+    "typecheck": "tsgo --noEmit"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -38,6 +40,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@typescript/native-preview": "7.0.0-dev.20260304.1",
     "concurrently": "^9.2.1",
     "orval": "^8.5.1",
     "tailwindcss": "^4",
