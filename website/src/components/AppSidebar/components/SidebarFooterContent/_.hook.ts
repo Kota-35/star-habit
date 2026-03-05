@@ -3,7 +3,6 @@ import type React from "react";
 import { useState } from "react";
 import type { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { useMe } from "@/server/__generated__/endpoints";
-import { useSettingsDialog } from "./components/SettingsDialog";
 
 export const useSidebarFooterContent = () => {
   const router = useRouter();
