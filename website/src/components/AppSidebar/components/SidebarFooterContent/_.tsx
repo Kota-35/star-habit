@@ -39,8 +39,8 @@ export const SidebarFooterContent = () => {
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <SidebarMenuButton className="h-auto select-none rounded-2xl py-2 hover:bg-blue-100/20 data-[state=closed]:focus-visible:ring-0">
-                  <div className="flex w-full items-center gap-2 px-1">
+                <SidebarMenuButton className="h-auto select-none rounded-2xl py-2 hover:bg-blue-100/20 data-[state=closed]:focus-visible:ring-0 group-data-[collapsible=icon]:h-16!">
+                  <div className="flex w-full items-center gap-2 pr-1">
                     <User className="h-7 w-7 shrink-0" />
 
                     <div className="flex min-w-0 flex-col gap-1">

@@ -1,6 +1,6 @@
 "use client";
 
-import { Home, type LucideIcon } from "lucide-react";
+import { Home, type LucideIcon, NotebookPen } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -13,7 +13,10 @@ import {
 } from "@/components/ui/sidebar";
 
 const SIDEBAR_MENU_ITEMS: { path: string; label: string; icon: LucideIcon }[] =
-  [{ path: "/home", label: "ホーム", icon: Home }];
+  [
+    { path: "/home", label: "ホーム", icon: Home },
+    { path: "/star", label: "STARログ作成", icon: NotebookPen },
+  ];
 
 export const SidebarBodyContent = () => {
   const pathname = usePathname();
@@ -22,7 +25,7 @@ export const SidebarBodyContent = () => {
     <SidebarContent>
       <SidebarGroup>
         <SidebarGroupContent>
-          <SidebarMenu>
+          <SidebarMenu className="flex flex-col">
             {SIDEBAR_MENU_ITEMS.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.path;
@@ -33,7 +36,7 @@ export const SidebarBodyContent = () => {
                     asChild
                     isActive={isActive}
                     tooltip={item.label}
-                    className="select-none rounded-2xl py-1 hover:bg-blue-100/20"
+                    className="select-none rounded-2xl py-1 text-gray-500 hover:bg-blue-100/20 hover:text-gray-700 data-active:bg-blue-50 data-active:text-blue-700 data-active:[&_svg]:text-blue-600"
                   >
                     <Link href={item.path}>
                       <Icon />
