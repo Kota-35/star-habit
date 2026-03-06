@@ -9,3 +9,14 @@ export function setCookie(
   // biome-ignore lint/suspicious/noDocumentCookie: minimal cookie setter for sidebar state; Cookie Store API has limited support
   document.cookie = parts.join("; ");
 }
+
+export function getCookie(name: string): string | null {
+  if (typeof document === "undefined") return null;
+  const target = `${name}=`;
+  const entry = document.cookie
+    .split(";")
+    .map((cookie) => cookie.trim())
+    .find((cookie) => cookie.startsWith(target));
+
+  return entry ? entry.slice(target.length) : null;
+}
